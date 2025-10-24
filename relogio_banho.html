@@ -3,69 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relógio de Banho LED</title>
+    <title>Relógio de Banho (Canvas)</title>
     
-    <!-- Carrega o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Fontes do Google (Inter para UI, Orbitron para o Relógio) -->
+    <!-- Carrega as fontes do Google (Orbitron + 6 outras) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- ATUALIZADO: Fonte trocada de VT323 para Orbitron -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Press+Start+2P&family=VT323&family=Fira+Code:wght@700&family=Bungee+Inline&family=Wallpoet&family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
     
     <style>
+        /* Textura de fundo do "rádio-relógio" */
         body {
-            font-family: 'Inter', sans-serif;
             overscroll-behavior-y: contain;
-            transition: background-color 0.3s;
-            background-blend-mode: overlay; 
+            /* Textura de ruído escuro */
+            background-image: url('https://www.transparenttextures.com/patterns/dark-noise.png');
+            background-color: #222222; /* Fundo padrão caso a textura falhe */
         }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-        input[type=number]::-webkit-outer-spin-button,
-        input[type=number]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .hidden {
-            display: none;
-        }
+
+        /* --- Estilos das Fontes --- */
+        /* Cada fonte tem um nome de classe CSS e ajustes específicos */
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .font-press-start { font-family: '"Press Start 2P"', cursive; }
+        .font-vt323 { font-family: 'VT323', monospace; }
+        .font-fira-code { font-family: '"Fira Code"', monospace; }
+        .font-bungee-inline { font-family: '"Bungee Inline"', cursive; }
+        .font-wallpoet { font-family: 'Wallpoet', cursive; }
+        .font-chakra-petch { font-family: '"Chakra Petch"', sans-serif; }
+
+        .hidden { display: none; }
         
+        /* --- Estilo do Relógio Principal --- */
         #main-clock {
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            /* ATUALIZADO: Fonte trocada para Orbitron */
-            font-family: 'Orbitron', 'monospace'; 
-            font-weight: 700; /* Orbitron fica melhor com peso */
-            letter-spacing: -0.05em; /* Reduz o espaço entre letras */
-            font-size: 8rem; /* text-9xl */
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            font-size: 8rem; /* Padrão (paisagem) */
             line-height: 1;
             transition: all 0.2s ease-out;
+            color: #00FF00; /* Verde-limão padrão */
+            text-shadow: 0 0 8px #00FF0099, 0 0 12px #00FF0077;
         }
-
         #main-clock-hours,
         #main-clock-minutes,
         #main-clock-separator {
             transition: all 0.2s ease-out;
-            line-height: 1; 
-            /* ATUALIZADO: Fonte trocada para Orbitron */
-            font-family: 'Orbitron', 'monospace';
+            line-height: 1;
         }
-
         #main-clock-separator {
              margin: 0 0.5rem;
         }
 
-        /* ATUALIZADO: Contagem e timer também usam a fonte Orbitron */
-        #countdown-display, #shower-timer {
-            font-family: 'Orbitron', 'monospace';
-            font-weight: 600;
-        }
-
+        /* --- MODO RETRATO (VERTICAL) --- */
         @media (orientation: portrait) {
             #main-clock {
                 flex-direction: column;
@@ -74,389 +66,200 @@
             #main-clock-separator {
                 display: none;
             }
-            #main-clock-hours, 
-            #main-clock-minutes {
-                /* ATUALIZADO: Ajuste de tamanho para a fonte Orbitron */
-                font-size: 75vw; /* Reduzido de 90vw (VT323) para 75vw (Orbitron) */
-                line-height: 0.8; /* Linhas mais juntas */
+            
+            /* Ajustes de tamanho específicos por fonte para modo retrato */
+            #main-clock.font-orbitron #main-clock-hours, 
+            #main-clock.font-orbitron #main-clock-minutes {
+                font-size: 75vw; line-height: 0.9;
+            }
+            #main-clock.font-press-start #main-clock-hours, 
+            #main-clock.font-press-start #main-clock-minutes {
+                font-size: 15vw; line-height: 1.1;
+            }
+            #main-clock.font-vt323 #main-clock-hours, 
+            #main-clock.font-vt323 #main-clock-minutes {
+                font-size: 80vw; line-height: 0.8;
+            }
+            #main-clock.font-fira-code #main-clock-hours, 
+            #main-clock.font-fira-code #main-clock-minutes {
+                font-size: 65vw; line-height: 0.9;
+            }
+            #main-clock.font-bungee-inline #main-clock-hours, 
+            #main-clock.font-bungee-inline #main-clock-minutes {
+                font-size: 55vw; line-height: 1;
+            }
+             #main-clock.font-wallpoet #main-clock-hours, 
+            #main-clock.font-wallpoet #main-clock-minutes {
+                font-size: 70vw; line-height: 1;
+            }
+            #main-clock.font-chakra-petch #main-clock-hours, 
+            #main-clock.font-chakra-petch #main-clock-minutes {
+                font-size: 75vw; line-height: 0.9;
             }
         }
         
-        /* ... (O resto do CSS dos seletores de cor permanece o mesmo) ... */
-        input[type="color"] {
+        /* --- Estilo dos Seletores (Cor, Fundo, Fonte) --- */
+        input[type=color] {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            width: 44px; 
-            height: 44px; 
+            width: 44px; height: 44px;
             background-color: transparent;
-            border: 2px solid #6b7280; 
-            border-radius: 50%; 
-            cursor: pointer;
-            padding: 0;
-            overflow: hidden;
-            transition: border-color 0.2s;
-        }
-        input[type="color"]:hover {
-            border-color: #9ca3af;
-        }
-        input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 0;
+            border: 2px solid #6b7280;
             border-radius: 50%;
+            cursor: pointer; padding: 0; overflow: hidden;
         }
-        input[type="color"]::-webkit-color-swatch {
-            border: none;
-            border-radius: 50%;
-        }
-        input[type="color"]::-moz-color-swatch {
-            border: none;
-            border-radius: 50%;
-        }
-        input[type="color"]::-moz-focus-inner {
-            border: 0;
-            padding: 0;
-        }
-        #voice-selector {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem; 
-        }
-        #test-voice-button {
-            padding-left: 1rem;
-            padding-right: 1rem;
-            flex-shrink: 0; 
+        input[type=color]::-webkit-color-swatch-wrapper { padding: 0; border-radius: 50%; }
+        input[type=color]::-webkit-color-swatch { border: none; border-radius: 50%; }
+        input[type=color]::-moz-color-swatch { border: none; border-radius: 50%; }
+        
+        /* Estilo do Seletor de Fonte */
+        #font-selector {
+            background-color: #4b5563; /* gray-600 */
+            border: 1px solid #6b7280; /* gray-500 */
+            border-radius: 8px;
+            padding: 4px 8px;
+            color: white;
+            font-weight: 500;
         }
     </style>
 </head>
 <body class="text-white overflow-hidden">
 
-    <!-- Botão de Habilitar/Desabilitar Fala -->
-    <button id="speech-toggle-button" class="fixed top-6 right-6 p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 z-50 transition-colors">
-        <!-- Ícone "Mudo" (padrão) -->
-        <svg id="icon-speech-off" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="block">
-            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
-            <line x1="23" y1="9" x2="17" y2="15"></line>
-            <line x1="17" y1="9" x2="23" y2="15"></line>
-        </svg>
-        <!-- Ícone "Ativado" (escondido) -->
-        <svg id="icon-speech-on" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
-            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-    </button>
+    <!-- ÁREA SUPERIOR (Botões de Fala e Fonte) -->
+    <div class="absolute top-0 left-0 right-0 w-full flex justify-between items-center p-4 z-10">
+        <!-- Seletor de Fonte -->
+        <select id="font-selector" class="text-sm">
+            <option value="font-orbitron" selected>Orbitron (Padrão)</option>
+            <option value="font-vt323">VT323 (Pixel)</option>
+            <option value="font-press-start">Press Start (8-bit)</option>
+            <option value="font-fira-code">Fira Code (Mono)</option>
+            <option value="font-bungee-inline">Bungee (Contorno)</option>
+            <option value="font-wallpoet">Wallpoet (Moderno)</option>
+            <option value="font-chakra-petch">Chakra Petch</option>
+        </select>
 
+        <!-- Botão Ligar/Desligar Fala -->
+        <button id="speech-toggle-button" class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+            <!-- Ícone Mudo (Padrão) -->
+            <svg id="icon-mute" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM19 12l-2 2m0-4l2 2"></path>
+            </svg>
+            <!-- Ícone Som (Oculto) -->
+            <svg id="icon-unmute" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+            </svg>
+        </button>
+    </div>
 
-    <!-- ATUALIZADO: Layout Principal (Controles em baixo) -->
+    <!-- Layout Principal (Flex) -->
     <div class="flex flex-col h-screen w-screen">
-        
-        <!-- ÁREA DO RELÓGIO (MOVIDA PARA CIMA) -->
-        <div class="flex-grow flex flex-col items-center justify-center px-6 sm:px-8 text-center pt-16 sm:pt-20">
-            
-            <div id="main-clock">
+
+        <!-- 1. ÁREA DO RELÓGIO (Ocupa o espaço restante) -->
+        <div class="flex-grow flex flex-col items-center justify-center text-center -mt-8">
+            <div id="main-clock" class="font-orbitron"> <!-- Fonte padrão aplicada aqui -->
                 <div id="main-clock-hours">00</div>
                 <div id="main-clock-separator">:</div>
                 <div id="main-clock-minutes">00</div>
             </div>
-            
-            <div id="countdown-display" class="hidden text-4xl sm:text-5xl mt-6">
+
+            <!-- Contagem Regressiva (Oculta) -->
+            <div id="countdown-display" class_="hidden text-2xl sm:text-3xl font-orbitron mt-6">
                 Iniciando em 60s...
             </div>
-            
+
+            <!-- Timer do Banho (Oculto) -->
             <div id="shower-timer-container" class="hidden flex flex-col items-center mt-6">
                 <span class="text-xl sm:text-2xl font-medium text-gray-300">Tempo de Banho</span>
-                <div id="shower-timer" class="text-6xl sm:text-7xl mt-1">
+                <div id="shower-timer" class="text-5xl sm:text-6xl font-semibold font-orbitron mt-1">
                     00:00
                 </div>
             </div>
         </div>
-        
-        <!-- ÁREA DE CONTROLOS (MOVIDA PARA BAIXO) -->
-        <div class="w-full flex flex-col items-center gap-4 px-6 sm:px-8 pb-12 sm:pb-16 pt-8">
+
+        <!-- 2. ÁREA DE CONTROLOS (Fixa em baixo) -->
+        <div class="w-full flex flex-col items-center gap-4 p-6 pb-12"> <!-- Mais padding em baixo (pb-12) -->
             
+            <!-- Controles (Visíveis no início) -->
             <div id="settings-container" class="flex flex-row items-center justify-center gap-4 transition-opacity duration-300">
+                <!-- Delay -->
                 <div class="flex flex-col items-center">
-                    <label for="delay-input" class="text-sm text-gray-400 mb-1">Atraso (s)</label>
+                    <label class="text-sm text-gray-400 mb-1">Atraso (s)</label>
                     <input type="number" id="delay-input" value="60" class="w-20 bg-gray-700 text-white text-lg font-bold p-2 rounded-lg text-center border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
+                <!-- Cor do Texto -->
                 <div class="flex flex-col items-center">
-                    <label for="color-picker" class="text-sm text-gray-400 mb-1">Texto</label>
+                    <label class="text-sm text-gray-400 mb-1">Texto</label>
                     <input type="color" id="color-picker" value="#00FF00">
                 </div>
+                <!-- Cor do Fundo -->
                 <div class="flex flex-col items-center">
-                    <label for="bg-color-picker" class="text-sm text-gray-400 mb-1">Fundo</label>
-                    <input type="color" id="bg-color-picker" value="#222222">
-                </div>
-            </div>
-            
-            <div id="voice-settings-container" class="hidden w-full max-w-sm flex flex-col items-center gap-2 transition-opacity duration-300">
-                <label for="voice-selector" class="text-sm text-gray-400">Voz</label>
-                <div class="flex flex-row w-full gap-2">
-                    <select id="voice-selector" class="w-full bg-gray-700 text-white text-lg p-2 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Carregando vozes...</option>
-                    </select>
-                    <button id="test-voice-button" class="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded-lg">Testar</button>
+                    <label class="text-sm text-gray-400 mb-1">Fundo</label>
+                    <input type="color" id="background-picker" value="#222222">
                 </div>
             </div>
 
+            <!-- Botão Principal -->
             <button id="start-button" class="w-full max-w-sm text-xl font-bold py-4 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform active:scale-95 bg-blue-600 hover:bg-blue-700 text-white">
                 Iniciar Banho
             </button>
         </div>
+    </div>
 
-
-    </div> <!-- Fim do Layout Principal -->
-
-
-    <!-- Script principal (Nenhuma mudança na lógica, apenas no visual) -->
     <script>
-        // --- Variáveis Globais para a API de Fala ---
-        let isSpeechEnabled = false; 
-        let speechListPopulated = false;
-        let speechWokenUp = false;
-        let ptVoices = []; 
-
-        const frasesMotivacionais = [
-            "Vamos lá, cada segundo conta!",
-            "Pense na economia de água!",
-            "Banho rápido, dia longo!",
-            "Não se demore!",
-            "Feche a torneira enquanto se ensaboa!",
-            "Seja rápido, o planeta agradece.",
-            "Menos tempo no banho, mais tempo para o café!",
-            "Banho rápido é um banho inteligente."
-        ];
-        let randomPhraseTimer = null; 
-
-        /**
-         * Função para "acordar" a API de fala.
-         */
-        function wakeupSpeechAPI() {
-            if (speechWokenUp) return;
-            speechWokenUp = true;
-            console.log("Tentando acordar a API de Fala...");
-
-            speechSynthesis.onvoiceschanged = () => {
-                console.log("Evento onvoiceschanged disparado.");
-                setupSpeech();
-            };
-
-            try {
-                let silentUtterance = new SpeechSynthesisUtterance('');
-                silentUtterance.volume = 0;
-                speechSynthesis.speak(silentUtterance);
-                
-                setTimeout(() => {
-                    if (!speechListPopulated) {
-                        console.log("Fallback: tentando carregar vozes manualmente...");
-                        setupSpeech();
-                    }
-                }, 250);
-
-            } catch (e) {
-                console.error("Falha ao 'acordar' a API de fala:", e);
-                setTimeout(setupSpeech, 100); 
-            }
-        }
-
-        /**
-         * Função para "acordar" a API de fala.
-         * Configura a API de Fala e POPULA o dropdown
-         */
-        function setupSpeech() {
-            if (speechListPopulated) return; 
-            console.log("setupSpeech() executado.");
-            
-            const voiceSelector = document.getElementById('voice-selector');
-            
-            try {
-                const allVoices = speechSynthesis.getVoices();
-                if (allVoices.length === 0) {
-                    console.warn("getVoices() retornou uma lista vazia.");
-                    return;
-                }
-
-                ptVoices = allVoices.filter(v => v.lang.startsWith('pt-'));
-                voiceSelector.innerHTML = ''; 
-
-                if (ptVoices.length > 0) {
-                    ptVoices.forEach((voice, index) => {
-                        const option = document.createElement('option');
-                        option.value = index; 
-                        option.textContent = `${voice.name} (${voice.lang})`;
-                        voiceSelector.appendChild(option);
-                    });
-                } else {
-                    voiceSelector.innerHTML = '<option value="">Nenhuma voz PT encontrada</option>';
-                }
-            } catch (e) {
-                console.error("API de Fala falhou ao carregar vozes:", e);
-                voiceSelector.innerHTML = '<option value="">Erro ao carregar vozes</option>';
-            }
-            
-            document.getElementById('voice-settings-container').classList.remove('hidden');
-            speechListPopulated = true; 
-        }
-
-        /**
-         * Função para falar um texto
-         * @param {string} text - O texto a ser falado
-         */
-        function speak(text) {
-            if (!isSpeechEnabled) return;
-
-            try {
-                speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                
-                if (speechListPopulated) { 
-                    const voiceSelector = document.getElementById('voice-selector');
-                    const selectedVoiceIndex = voiceSelector.value;
-                    if (selectedVoiceIndex !== "" && ptVoices[selectedVoiceIndex]) {
-                        utterance.voice = ptVoices[selectedVoiceIndex];
-                        utterance.lang = ptVoices[selectedVoiceIndex].lang;
-                    } else {
-                        utterance.lang = 'pt-BR'; // Fallback
-                    }
-                } else {
-                    utterance.lang = 'pt-BR'; 
-                }
-                
-                utterance.rate = 1.0; 
-                speechSynthesis.speak(utterance);
-            } catch (e) {
-                console.error("Erro ao tentar falar:", e);
-            }
-        }
-
-        /**
-         * Converte a hora atual em uma frase falada.
-         */
-        function getHoraFalada(date) {
-            const h = date.getHours();
-            const m = date.getMinutes();
-            let horaStr = "";
-            let minStr = "";
-
-            if (h === 0) horaStr = "meia-noite";
-            else if (h === 1) horaStr = "uma";
-            else if (h === 12) horaStr = "meio-dia";
-            else horaStr = h.toString(); 
-
-            if (m === 0) minStr = "em ponto";
-            else if (m === 1) minStr = "e um";
-            else if (m === 2) minStr = "e dois"; 
-            else minStr = "e " + m.toString(); 
-
-            return `Agora são ${horaStr} ${minStr}.`;
-        }
-
-        /**
-         * Agenda a próxima frase motivacional aleatória.
-         */
-        function scheduleRandomPhrase() {
-            if (appState !== 'timing') {
-                if(randomPhraseTimer) clearTimeout(randomPhraseTimer);
-                randomPhraseTimer = null;
-                return; 
-            }
-            
-            const delay = (Math.random() * (70 - 30) + 30) * 1000;
-            
-            randomPhraseTimer = setTimeout(() => {
-                if (appState === 'timing' && showerSeconds % 60 !== 0) { 
-                    const frase = frasesMotivacionais[Math.floor(Math.random() * frasesMotivacionais.length)];
-                    speak(frase);
-                }
-                scheduleRandomPhrase(); 
-            }, delay);
-        }
-
-        // --- Lógica Principal do Aplicativo ---
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- Referências do DOM ---
+            const mainClockEl = document.getElementById('main-clock');
             const mainClockHoursEl = document.getElementById('main-clock-hours');
             const mainClockMinutesEl = document.getElementById('main-clock-minutes');
             const mainClockSeparatorEl = document.getElementById('main-clock-separator');
+            
             const countdownDisplayEl = document.getElementById('countdown-display');
             const showerTimerContainerEl = document.getElementById('shower-timer-container');
             const showerTimerEl = document.getElementById('shower-timer');
+            
             const settingsContainerEl = document.getElementById('settings-container');
             const delayInputEl = document.getElementById('delay-input');
             const colorPickerEl = document.getElementById('color-picker');
+            const backgroundPickerEl = document.getElementById('background-picker');
             const startButtonEl = document.getElementById('start-button');
-            const bgColorPickerEl = document.getElementById('bg-color-picker');
-            const testVoiceButtonEl = document.getElementById('test-voice-button');
-            const speechToggleButton = document.getElementById('speech-toggle-button');
-            const iconSpeechOn = document.getElementById('icon-speech-on');
-            const iconSpeechOff = document.getElementById('icon-speech-off');
-            const voiceSettingsContainer = document.getElementById('voice-settings-container');
+            const fontSelectorEl = document.getElementById('font-selector');
 
+            const speechToggleButton = document.getElementById('speech-toggle-button');
+            const iconMute = document.getElementById('icon-mute');
+            const iconUnmute = document.getElementById('icon-unmute');
+
+            // --- Elementos afetados pela cor do texto ---
             const colorElements = [
                 mainClockHoursEl, mainClockMinutesEl, mainClockSeparatorEl,
                 countdownDisplayEl, showerTimerEl
             ];
+            
+            // --- Elementos afetados pela fonte ---
+            const fontElements = [
+                mainClockEl, countdownDisplayEl, showerTimerEl
+            ];
 
-            // --- Variáveis de Estado ---
-            let appState = 'idle'; 
+            // --- Estado da Aplicação ---
+            let appState = 'idle'; // 'idle', 'countdown', 'timing'
             let mainClockInterval = null;
             let countdownInterval = null;
             let showerTimerInterval = null;
+            let phraseInterval = null; // Temporizador para as frases
+
             let countdownSeconds = 0;
             let showerSeconds = 0;
 
-            // --- Funções Auxiliares ---
+            // --- Estado da Fala (Speech) ---
+            let speechEnabled = false;
+            let ptBrVoices = [];
+            let speechApiReady = false;
+            
+            // --- Estado do Áudio (Beep) ---
+            let audioCtx = null; // AudioContext nativo
 
-            /**
-             * ATUALIZADO: Movida para dentro do DOMContentLoaded para corrigir o escopo.
-             * Converte a hora atual em uma frase falada.
-             */
-            function getHoraFalada(date) {
-                const h = date.getHours();
-                const m = date.getMinutes();
-                let horaStr = "";
-                let minStr = "";
-
-                if (h === 0) horaStr = "meia-noite";
-                else if (h === 1) horaStr = "uma";
-                else if (h === 12) horaStr = "meio-dia";
-                else horaStr = h.toString(); 
-
-                if (m === 0) minStr = "em ponto";
-                else if (m === 1) minStr = "e um";
-                else if (m === 2) minStr = "e dois"; 
-                else minStr = "e " + m.toString(); 
-
-                return `Agora são ${horaStr} ${minStr}.`;
-            }
-
-            /**
-             * ATUALIZADO: Movida para dentro do DOMContentLoaded para corrigir o escopo.
-             * Agenda a próxima frase motivacional aleatória.
-             */
-            function scheduleRandomPhrase() {
-                if (appState !== 'timing') {
-                    if(randomPhraseTimer) clearTimeout(randomPhraseTimer);
-                    randomPhraseTimer = null;
-                    return; 
-                }
-                
-                const delay = (Math.random() * (70 - 30) + 30) * 1000;
-                
-                randomPhraseTimer = setTimeout(() => {
-                    if (appState === 'timing' && showerSeconds % 60 !== 0) { 
-                        const frase = frasesMotivacionais[Math.floor(Math.random() * frasesMotivacionais.length)];
-                        speak(frase);
-                    }
-                    scheduleRandomPhrase(); 
-                }, delay);
-            }
-
+            // --- Funções Auxiliares (Relógio e UI) ---
 
             function formatTimer(totalSeconds) {
                 const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -474,11 +277,24 @@
             }
 
             function updateColor(hexColor) {
-                const glowShadow = `0 0 10px ${hexColor}99, 0 0 15px ${hexColor}77, 0 0 20px ${hexColor}55`;
+                const glowShadow = `0 0 8px ${hexColor}99, 0 0 12px ${hexColor}77`;
                 colorElements.forEach(el => {
                     if(el) { 
                         el.style.color = hexColor;
                         el.style.textShadow = glowShadow;
+                    }
+                });
+            }
+
+            function updateFont(fontClassName) {
+                const allFontClasses = [
+                    'font-orbitron', 'font-press-start', 'font-vt323', 
+                    'font-fira-code', 'font-bungee-inline', 'font-wallpoet', 'font-chakra-petch'
+                ];
+                fontElements.forEach(el => {
+                    if (el) {
+                        el.classList.remove(...allFontClasses);
+                        el.classList.add(fontClassName);
                     }
                 });
             }
@@ -496,21 +312,205 @@
                     startButtonEl.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
                 }
             }
+            
+            // --- Funções de Áudio (Beep Nativo) ---
+            
+            function initAudio() {
+                // Inicia o AudioContext no clique, como exigido pelo navegador
+                if (!audioCtx) {
+                    try {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        console.log("AudioContext iniciado com sucesso.");
+                    } catch (e) {
+                        console.error("Falha ao iniciar AudioContext:", e);
+                    }
+                }
+            }
+            
+            function playBeep() {
+                if (!audioCtx) return; // Não faz nada se o áudio falhou ao iniciar
+
+                try {
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    oscillator.type = 'sine'; // Tipo de onda (beep)
+                    oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime); // Tom (1000Hz)
+                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // Volume
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    oscillator.start(audioCtx.currentTime);
+                    // Duração do beep (0.15 segundos)
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                } catch (e) {
+                    console.error("Falha ao tocar o beep:", e);
+                }
+            }
+
+            // --- Funções de Fala (Speech Synthesis) ---
+
+            function loadVoices() {
+                if (speechApiReady) return; // Já carregou
+
+                try {
+                    const allVoices = window.speechSynthesis.getVoices();
+                    ptBrVoices = allVoices.filter(voice => voice.lang === 'pt-BR');
+                    
+                    if (ptBrVoices.length > 0) {
+                        speechApiReady = true;
+                        console.log("Vozes pt-BR carregadas:", ptBrVoices.length);
+                        // Fala "Habilitada" na primeira vez que carrega
+                        speak("Fala habilitada");
+                    } else {
+                        console.warn("Nenhuma voz pt-BR encontrada.");
+                        // Tenta de novo se a lista estiver vazia na primeira vez
+                        if (allVoices.length === 0) {
+                             window.speechSynthesis.onvoiceschanged = loadVoices;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Erro ao carregar vozes:", e);
+                }
+            }
+
+            function setupSpeech() {
+                if (!speechEnabled) return; // Não faz nada se estiver desligado
+                
+                // Tenta "acordar" a API de fala.
+                // Isso é necessário em alguns navegadores móveis.
+                speak(""); // Fala algo vazio
+                
+                // Tenta carregar as vozes
+                loadVoices();
+                // Garante que as vozes sejam carregadas se a API demorar
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = loadVoices;
+                }
+            }
+
+            function speak(text) {
+                if (!speechEnabled || !speechApiReady || !text) return; // Não fala se desabilitado
+                
+                try {
+                    window.speechSynthesis.cancel(); // Para qualquer fala anterior
+
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    
+                    // 4. Escolhe uma voz pt-BR aleatória
+                    if (ptBrVoices.length > 0) {
+                        const randomVoice = ptBrVoices[Math.floor(Math.random() * ptBrVoices.length)];
+                        utterance.voice = randomVoice;
+                    }
+                    
+                    utterance.lang = 'pt-BR';
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                    console.error("Erro ao falar:", e);
+                }
+            }
+
+            // 2. Função de Hora Falada (Formato Brasileiro)
+            function getHoraFaladaBrasileira() {
+                const now = new Date();
+                let h = now.getHours();
+                const m = now.getMinutes();
+                let periodo = "";
+
+                if (h >= 0 && h < 6) periodo = "da madrugada";
+                else if (h >= 6 && h < 12) periodo = "da manhã";
+                else if (h >= 12 && h < 18) periodo = "da tarde";
+                else periodo = "da noite";
+
+                if (h > 12) h -= 12;
+                if (h === 0) h = 12; // Meia-noite ou Meio-dia
+
+                let horaFalada = "São " + h;
+                
+                if (h === 1) horaFalada = "É uma";
+                if (h === 12 && m === 0) horaFalada = "É meio-dia";
+                if (h === 12 && m > 0 && periodo === "da tarde") horaFalada = "É meio-dia";
+                if (h === 12 && m === 0 && periodo === "da madrugada") horaFalada = "É meia-noite";
+                if (h === 12 && m > 0 && periodo === "da madrugada") horaFalada = "É meia-noite";
+
+
+                if (m === 0) {
+                    horaFalada += ` em ponto ${periodo}.`;
+                } else if (m === 30) {
+                    horaFalada += ` e meia ${periodo}.`;
+                } else if (m === 15) {
+                    horaFalada += ` e quinze ${periodo}.`;
+                } else {
+                    horaFalada += ` e ${m} minuto${m > 1 ? 's' : ''} ${periodo}.`;
+                }
+                
+                return horaFalada;
+            }
+
+            // 5. Frases Motivacionais (IA)
+            const frasesAmigaveis = [
+                "Banho rápido, dia longo!",
+                "Economizar água é um ótimo começo de dia!",
+                "Vamos lá, rapidinho!",
+                "Pense na sua conta de água e energia!"
+            ];
+            
+            const frasesFirmes = [
+                "Já passou de 4 minutos! Vamos acelerar!",
+                "Atenção ao tempo! Finalizando o banho.",
+                "Já deu, foco na economia!",
+                "Planeta agradece! Vamos fechar a torneira."
+            ];
+
+            function scheduleRandomPhrase() {
+                if (!speechEnabled) return; // Não agenda se a fala estiver desligada
+
+                let minDelay, maxDelay;
+                let frases;
+
+                // 5. Lógica de tempo e tom das frases
+                if (showerSeconds < 240) { // Menos de 4 minutos (04:00)
+                    minDelay = 50000; // 50s
+                    maxDelay = 100000; // 100s
+                    frases = frasesAmigaveis;
+                } else { // Mais de 4 minutos
+                    minDelay = 30000; // 30s
+                    maxDelay = 70000; // 70s
+                    frases = frasesFirmes;
+                }
+
+                const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+
+                phraseInterval = setTimeout(() => {
+                    // Não fala se estivermos exatamente no minuto (para não conflitar com o beep)
+                    if (showerSeconds % 60 !== 0) { 
+                        const frase = frases[Math.floor(Math.random() * frases.length)];
+                        speak(frase);
+                    }
+                    // Agenda a próxima frase
+                    scheduleRandomPhrase(); 
+                }, delay);
+            }
 
             // --- Funções de Lógica Principal ---
+
             function startCountdown() {
                 appState = 'countdown';
                 setButtonState('countdown');
+                
                 let delay = parseInt(delayInputEl.value, 10);
-                if (isNaN(delay) || delay < 0) { delay = 0; }
+                if (isNaN(delay) || delay < 0) delay = 0;
                 countdownSeconds = delay;
+
                 settingsContainerEl.classList.add('hidden');
-                voiceSettingsContainer.classList.add('hidden');
                 countdownDisplayEl.classList.remove('hidden');
                 countdownDisplayEl.textContent = `Iniciando em ${countdownSeconds}s...`;
+
                 countdownInterval = setInterval(() => {
                     countdownSeconds--;
                     countdownDisplayEl.textContent = `Iniciando em ${countdownSeconds}s...`;
+
                     if (countdownSeconds <= 0) {
                         clearInterval(countdownInterval);
                         countdownInterval = null;
@@ -523,114 +523,121 @@
                 appState = 'timing';
                 setButtonState('timing');
                 showerSeconds = 0;
+
                 countdownDisplayEl.classList.add('hidden');
                 showerTimerContainerEl.classList.remove('hidden');
                 showerTimerEl.textContent = '00:00';
-
+                
+                // Agenda a primeira frase motivacional
                 scheduleRandomPhrase();
 
                 showerTimerInterval = setInterval(() => {
                     showerSeconds++;
                     showerTimerEl.textContent = formatTimer(showerSeconds);
                     
-                    if (showerSeconds > 0 && showerSeconds % 180 === 0) {
-                        const minutes = showerSeconds / 60;
-                        const minuteText = minutes > 1 ? 'minutos' : 'minuto';
-                        const verbText = minutes > 1 ? 'passaram' : 'passou';
-                        let text = `Já se ${verbText} ${minutes} ${minuteText}.`;
+                    const minutos = Math.floor(showerSeconds / 60);
+                    const segundos = showerSeconds % 60;
+
+                    // 1. A cada minuto (ex: 01:00, 02:00)
+                    if (segundos === 0 && minutos > 0) {
+                        playBeep(); // Toca o beep
                         
-                        text += ` ${getHoraFalada(new Date())}`;
-                        speak(text);
+                        // Espera o beep terminar para falar
+                        setTimeout(() => {
+                            const textoMinuto = `Já ${minutos === 1 ? 'se passou 1 minuto' : `se passaram ${minutos} minutos`}.`;
+                            speak(textoMinuto);
+                        }, 300); // 300ms de atraso
                     }
+
+                    // 2. A cada 2 minutos, no segundo 5 (ex: 02:05, 04:05)
+                    if (minutos > 0 && minutos % 2 === 0 && segundos === 5) {
+                        const horaTexto = getHoraFaladaBrasileira();
+                        speak(horaTexto);
+                    }
+
                 }, 1000);
             }
 
             function stopAndReset() {
-                if (appState === 'timing' && showerSeconds > 0) {
-                    const totalMinutes = Math.floor(showerSeconds / 60);
-                    const totalSecondsPart = showerSeconds % 60;
-                    let summaryText = `Banho finalizado. Tempo total: ${totalMinutes} ${totalMinutes !== 1 ? 'minutos' : 'minuto'}`;
-                    if (totalSecondsPart > 0) {
-                        summaryText += ` e ${totalSecondsPart} segundos`;
-                    }
-                    summaryText += `. ${getHoraFalada(new Date())}`;
-                    speak(summaryText);
-                }
                 appState = 'idle';
                 setButtonState('idle');
-                if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-                if (showerTimerInterval) { clearInterval(showerTimerInterval); showerTimerInterval = null; }
-                
-                if (randomPhraseTimer) {
-                    clearTimeout(randomPhraseTimer);
-                    randomPhraseTimer = null;
-                }
 
+                if (countdownInterval) clearInterval(countdownInterval);
+                if (showerTimerInterval) clearInterval(showerTimerInterval);
+                if (phraseInterval) clearTimeout(phraseInterval); // Cancela a próxima frase
+
+                countdownInterval = null;
+                showerTimerInterval = null;
+                phraseInterval = null;
+                
                 settingsContainerEl.classList.remove('hidden');
-                if (isSpeechEnabled) {
-                    voiceSettingsContainer.classList.remove('hidden');
-                }
                 countdownDisplayEl.classList.add('hidden');
                 showerTimerContainerEl.classList.add('hidden');
+
                 countdownSeconds = 0;
                 showerSeconds = 0;
+                
+                // Para qualquer fala pendente
+                if (speechEnabled) {
+                    window.speechSynthesis.cancel();
+                }
             }
 
-            // --- Event Listeners ---
-            
-            speechToggleButton.addEventListener('click', () => {
-                isSpeechEnabled = !isSpeechEnabled; 
-                if (isSpeechEnabled) {
-                    iconSpeechOn.classList.remove('hidden');
-                    iconSpeechOff.classList.add('hidden');
-                    speechToggleButton.classList.add('bg-blue-600'); 
-                    wakeupSpeechAPI(); 
-                    setTimeout(() => {
-                        speak('Fala habilitada.');
-                    }, 150);
-                } else {
-                    iconSpeechOn.classList.add('hidden');
-                    iconSpeechOff.classList.remove('hidden');
-                    speechToggleButton.classList.remove('bg-blue-600');
-                    speechSynthesis.cancel(); 
-                    voiceSettingsContainer.classList.add('hidden');
-                }
-            });
+            // --- Event Listeners Principais ---
 
             startButtonEl.addEventListener('click', () => {
                 if (appState === 'idle') {
+                    // TENTA INICIAR O ÁUDIO (Beep)
+                    // Isto SÓ funciona se for chamado dentro de um evento de clique
+                    initAudio(); 
+                    
+                    // Tenta iniciar a FALA
+                    if (speechEnabled) {
+                        setupSpeech();
+                    }
+                    
+                    // Inicia a contagem
                     startCountdown();
+
                 } else if (appState === 'countdown' || appState === 'timing') {
                     stopAndReset();
                 }
             });
 
-            colorPickerEl.addEventListener('input', (e) => {
-                updateColor(e.target.value);
+            // Botão de Ligar/Desligar Fala
+            speechToggleButton.addEventListener('click', () => {
+                speechEnabled = !speechEnabled;
+                if (speechEnabled) {
+                    iconMute.classList.add('hidden');
+                    iconUnmute.classList.remove('hidden');
+                    speechToggleButton.classList.add('bg-blue-500'); // Fica azul
+                    setupSpeech(); // Tenta carregar as vozes
+                } else {
+                    iconMute.classList.remove('hidden');
+                    iconUnmute.classList.add('hidden');
+                    speechToggleButton.classList.remove('bg-blue-500');
+                    window.speechSynthesis.cancel(); // Para qualquer fala
+                }
             });
 
-            bgColorPickerEl.addEventListener('input', (e) => {
+            // Seletores de Cor e Fonte
+            colorPickerEl.addEventListener('input', (e) => updateColor(e.target.value));
+            backgroundPickerEl.addEventListener('input', (e) => {
                 document.body.style.backgroundColor = e.target.value;
-                document.body.style.backgroundImage = "url('https://www.transparenttextures.com/patterns/subtle-noise.png')";
             });
-
-            testVoiceButtonEl.addEventListener('click', () => {
-                speak('Esta é uma voz de teste.');
-            });
+            fontSelectorEl.addEventListener('change', (e) => updateFont(e.target.value));
 
             // --- Inicialização ---
+            
             updateMainClock();
             mainClockInterval = setInterval(updateMainClock, 1000); 
+            
             setButtonState('idle');
 
-            const defaultColor = '#00FF00'; // Verde-LED
-            colorPickerEl.value = defaultColor;
-            updateColor(defaultColor);
-
-            const defaultBgColor = '#222222'; // Cinza-escuro (plástico)
-            bgColorPickerEl.value = defaultBgColor;
-            document.body.style.backgroundColor = defaultBgColor;
-            document.body.style.backgroundImage = "url('https://www.transparenttextures.com/patterns/subtle-noise.png')";
+            // Define a cor inicial e fonte
+            updateColor(colorPickerEl.value);
+            updateFont(fontSelectorEl.value);
+            document.body.style.backgroundColor = backgroundPickerEl.value;
         });
     </script>
 
