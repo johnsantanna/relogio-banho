@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relógio de Banho LED</title>
+    
+    <!-- Carrega o Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fontes do Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Estilos CSS (layout empilhado, seletor de cor) */
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior-y: contain;
+            /* A cor de fundo será definida pelo JS */
+            transition: background-color 0.3s;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .hidden {
+            display: none;
+        }
+        
+        #main-clock {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            font-family: 'monospace', 'Inter', sans-serif;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            font-size: 8rem; /* text-9xl */
+            line-height: 1;
+            transition: all 0.2s ease-out;
+        }
+
+        #main-clock-hours,
+        #main-clock-minutes,
+        #main-clock-separator {
+            transition: all 0.2s ease-out;
+            line-height: 1; /* Garante alinhamento */
+        }
+
+        #main-clock-separator {
+             margin: 0 0.5rem;
+        }
+
+        @media (orientation: portrait) {
+            #main-clock {
+                flex-direction: column;
+                gap: 0;
+            }
+            #main-clock-separator {
+                display: none;
+            }
+            #main-clock-hours, 
+            #main-clock-minutes {
+                font-size: 90vw; 
+                line-height: 0.8; 
+            }
+        }
+        
+        input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 44px; /* Tamanho (similar ao input) */
+            height: 44px; /* Tamanho (similar ao input) */
+            background-color: transparent;
+            border: 2px solid #6b7280; /* gray-500 */
+            border-radius: 50%; /* Círculo */
+            cursor: pointer;
+            padding: 0;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        input[type="color"]:hover {
+            border-color: #9ca3af; /* gray-400 */
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+            border-radius: 50%;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+        input[type="color"]::-moz-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+        input[type="color"]::-moz-focus-inner {
+            border: 0;
+            padding: 0;
+        }
+
+        #voice-selector {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem; /* Espaço para a seta */
+        }
+
+        #test-voice-button {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            flex-shrink: 0; /* Impede que o botão encolha */
+        }
+    </style>
+</head>
+<body class="text-white overflow-hidden">
+
+    <!-- ATUALIZAÇÃO DE LAYOUT: Padding removido do container principal -->
+    <div class="flex flex-col h-screen w-screen">
+
+        <!-- ATUALIZAÇÃO DE LAYOUT: Padding aplicado na área do relógio -->
+        <div class="flex-grow flex flex-col items-center justify-center pt-12 px-6 sm:px-8 text-center">
+            
+            <div id="main-clock">
+                <div id="main-clock-hours">00</div>
+                <div id="main-clock-separator">:</div>
+                <div id="main-clock-minutes">00</div>
+            </div>
+            
+            <div id="countdown-display" class="hidden text-2xl sm:text-3xl font-mono mt-6">
+                Iniciando em 60s...
+            </div>
+            
+            <div id="shower-timer-container" class="hidden flex flex-col items-center mt-6">
+                <span class="text-xl sm:text-2xl font-medium text-gray-300">Tempo de Banho</span>
+                <div id="shower-timer" class="text-5xl sm:text-6xl font-semibold font-mono mt-1">
+                    00:00
+                </div>
+            </div>
+        </div>
+
+        <!-- ATUALIZAÇÃO DE LAYOUT: Padding (especialmente pb-12) aplicado na área de controlos -->
+        <div class="w-full flex flex-col items-center gap-4 px-6 sm:px-8 pb-12 sm:pb-16">
+            
+            <!-- Linha 1: Configurações de Atraso e Cores -->
+            <div id="settings-container" class="flex flex-row items-center justify-center gap-4 transition-opacity duration-300">
+                <!-- Atraso -->
+                <div class="flex flex-col items-center">
+                    <label for="delay-input" class="text-sm text-gray-400 mb-1">Atraso (s)</label>
+                    <input type="number" id="delay-input" value="60" class="w-20 bg-gray-700 text-white text-lg font-bold p-2 rounded-lg text-center border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <!-- Cor do Texto -->
+                <div class="flex flex-col items-center">
+                    <label for="color-picker" class="text-sm text-gray-400 mb-1">Texto</label>
+                    <input type="color" id="color-picker" value="#FFFFFF">
+                </div>
+                <!-- Cor do Fundo -->
+                <div class="flex flex-col items-center">
+                    <label for="bg-color-picker" class="text-sm text-gray-400 mb-1">Fundo</label>
+                    <input type="color" id="bg-color-picker" value="#111827"> <!-- bg-gray-900 -->
+                </div>
+            </div>
+            
+            <!-- Linha 2: Configurações de Voz (Inicia escondido) -->
+            <div id="voice-settings-container" class="hidden w-full max-w-sm flex flex-col items-center gap-2 transition-opacity duration-300">
+                <label for="voice-selector" class="text-sm text-gray-400">Voz</label>
+                <div class="flex flex-row w-full gap-2">
+                    <select id="voice-selector" class="w-full bg-gray-700 text-white text-lg p-2 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Carregando vozes...</option>
+                    </select>
+                    <button id="test-voice-button" class="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded-lg">Testar</button>
+                </div>
+            </div>
+
+            <!-- Linha 3: Botão Principal -->
+            <button id="start-button" class="w-full max-w-sm text-xl font-bold py-4 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform active:scale-95 bg-blue-600 hover:bg-blue-700 text-white">
+                Iniciar Banho
+            </button>
+        </div>
+    </div>
+
+    <!-- Script principal -->
+    <script>
+        // --- Variáveis Globais para a API de Fala ---
+        let speechListPopulated = false; // Controla se a lista de vozes já foi carregada
+        let speechWokenUp = false; // Controla se já tentámos "acordar" a API
+        let ptVoices = []; // Armazena a lista de vozes
+
+        /**
+         * CORREÇÃO: Função para "acordar" a API de fala.
+         * Isto deve ser chamado por um clique do utilizador.
+         */
+        function wakeupSpeechAPI() {
+            if (speechWokenUp) return;
+            speechWokenUp = true;
+            console.log("Tentando acordar a API de Fala...");
+
+            // 1. OBRIGATÓRIO: Atribui o listener ANTES de acionar o speak.
+            // Este evento é o único que nos diz com segurança quando getVoices() está pronto.
+            speechSynthesis.onvoiceschanged = () => {
+                console.log("Evento onvoiceschanged disparado.");
+                setupSpeech();
+            };
+
+            // 2. Aciona o "despertar"
+            try {
+                // Falar algo silencioso "acorda" a API em alguns navegadores
+                let silentUtterance = new SpeechSynthesisUtterance('');
+                silentUtterance.volume = 0;
+                speechSynthesis.speak(silentUtterance);
+
+                // Fallback para navegadores (como alguns no PC) que não
+                // disparam 'onvoiceschanged' após o speak().
+                // Tenta carregar as vozes após um curto atraso.
+                setTimeout(() => {
+                    if (!speechListPopulated) {
+                        console.log("Fallback: tentando carregar vozes manualmente...");
+                        setupSpeech();
+                    }
+                }, 250);
+
+            } catch (e) {
+                console.error("Falha ao 'acordar' a API de fala:", e);
+                // Se o 'speak' falhar, tenta carregar as vozes manualmente
+                // como um fallback final.
+                setTimeout(setupSpeech, 100); 
+            }
+        }
+
+
+        /**
+         * Configura a API de Fala e POPULA o dropdown
+         */
+        function setupSpeech() {
+            // Garante que isto só corre uma vez
+            if (speechListPopulated) return; 
+            console.log("setupSpeech() executado.");
+            
+            const voiceSelector = document.getElementById('voice-selector');
+            
+            try {
+                const allVoices = speechSynthesis.getVoices();
+                if (allVoices.length === 0) {
+                    console.warn("getVoices() retornou uma lista vazia.");
+                    // Não faz nada, espera pelo próximo 'onvoiceschanged'
+                    return;
+                }
+
+                // Filtra apenas vozes em Português
+                ptVoices = allVoices.filter(v => v.lang.startsWith('pt-'));
+                
+                voiceSelector.innerHTML = ''; // Limpa "Carregando..."
+
+                if (ptVoices.length > 0) {
+                    ptVoices.forEach((voice, index) => {
+                        const option = document.createElement('option');
+                        option.value = index; // Usa o índice como valor
+                        option.textContent = `${voice.name} (${voice.lang})`;
+                        voiceSelector.appendChild(option);
+                    });
+                } else {
+                    voiceSelector.innerHTML = '<option value="">Nenhuma voz PT encontrada</option>';
+                }
+            } catch (e) {
+                console.error("API de Fala falhou ao carregar vozes:", e);
+                voiceSelector.innerHTML = '<option value="">Erro ao carregar vozes</option>';
+            }
+            
+            // Exibe a seção de vozes, mesmo se houver erro
+            document.getElementById('voice-settings-container').classList.remove('hidden');
+            speechListPopulated = true; // Marca como "concluído"
+        }
+
+        /**
+         * Função para falar um texto
+         * @param {string} text - O texto a ser falado
+         */
+        function speak(text) {
+            try {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // SÓ tenta pegar a voz selecionada se a lista estiver pronta
+                if (speechListPopulated) { 
+                    const voiceSelector = document.getElementById('voice-selector');
+                    const selectedVoiceIndex = voiceSelector.value;
+                    if (selectedVoiceIndex !== "" && ptVoices[selectedVoiceIndex]) {
+                        utterance.voice = ptVoices[selectedVoiceIndex];
+                        utterance.lang = ptVoices[selectedVoiceIndex].lang;
+                    } else {
+                        utterance.lang = 'pt-BR'; // Fallback
+                    }
+                } else {
+                    utterance.lang = 'pt-BR'; // Fallback se a lista ainda não carregou
+                }
+                
+                utterance.rate = 1.0; 
+                speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.error("Erro ao tentar falar:", e);
+            }
+        }
+
+        // --- Lógica Principal do Aplicativo ---
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Referências do DOM ---
+            const mainClockHoursEl = document.getElementById('main-clock-hours');
+            const mainClockMinutesEl = document.getElementById('main-clock-minutes');
+            const mainClockSeparatorEl = document.getElementById('main-clock-separator');
+            const countdownDisplayEl = document.getElementById('countdown-display');
+            const showerTimerContainerEl = document.getElementById('shower-timer-container');
+            const showerTimerEl = document.getElementById('shower-timer');
+            const settingsContainerEl = document.getElementById('settings-container');
+            const delayInputEl = document.getElementById('delay-input');
+            const colorPickerEl = document.getElementById('color-picker');
+            const startButtonEl = document.getElementById('start-button');
+            const bgColorPickerEl = document.getElementById('bg-color-picker');
+            const testVoiceButtonEl = document.getElementById('test-voice-button');
+
+            const colorElements = [
+                mainClockHoursEl, mainClockMinutesEl, mainClockSeparatorEl,
+                countdownDisplayEl, showerTimerEl
+            ];
+
+            // --- Variáveis de Estado ---
+            let appState = 'idle'; // 'idle', 'countdown', 'timing'
+            let mainClockInterval = null;
+            let countdownInterval = null;
+            let showerTimerInterval = null;
+            let countdownSeconds = 0;
+            let showerSeconds = 0;
+
+            // --- Funções Auxiliares ---
+            function formatTimer(totalSeconds) {
+                const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+                return `${minutes}:${seconds}`;
+            }
+
+            function updateMainClock() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                
+                mainClockHoursEl.textContent = hours;
+                mainClockMinutesEl.textContent = minutes;
+            }
+
+            function updateColor(hexColor) {
+                const glowShadow = `0 0 8px ${hexColor}99, 0 0 12px ${hexColor}77`;
+                colorElements.forEach(el => {
+                    if(el) { 
+                        el.style.color = hexColor;
+                        el.style.textShadow = glowShadow;
+                    }
+                });
+            }
+
+            function setButtonState(state) {
+                startButtonEl.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-red-600', 'hover:bg-red-700', 'bg-yellow-600', 'hover:bg-yellow-700');
+                if (state === 'idle') {
+                    startButtonEl.textContent = 'Iniciar Banho';
+                    startButtonEl.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                } else if (state === 'countdown') {
+                    startButtonEl.textContent = 'Cancelar';
+                    startButtonEl.classList.add('bg-red-600', 'hover:bg-red-700');
+                } else if (state === 'timing') {
+                    startButtonEl.textContent = 'Parar Banho';
+                    startButtonEl.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+                }
+            }
+
+            // --- Funções de Lógica Principal ---
+            function startCountdown() {
+                appState = 'countdown';
+                setButtonState('countdown');
+                let delay = parseInt(delayInputEl.value, 10);
+                if (isNaN(delay) || delay < 0) { delay = 0; }
+                countdownSeconds = delay;
+                settingsContainerEl.classList.add('hidden');
+                countdownDisplayEl.classList.remove('hidden');
+                countdownDisplayEl.textContent = `Iniciando em ${countdownSeconds}s...`;
+                countdownInterval = setInterval(() => {
+                    countdownSeconds--;
+                    countdownDisplayEl.textContent = `Iniciando em ${countdownSeconds}s...`;
+                    if (countdownSeconds <= 0) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                        startShowerTimer();
+                    }
+                }, 1000);
+            }
+
+            function startShowerTimer() {
+                appState = 'timing';
+                setButtonState('timing');
+                showerSeconds = 0;
+                countdownDisplayEl.classList.add('hidden');
+                showerTimerContainerEl.classList.remove('hidden');
+                showerTimerEl.textContent = '00:00';
+                showerTimerInterval = setInterval(() => {
+                    showerSeconds++;
+                    showerTimerEl.textContent = formatTimer(showerSeconds);
+                    if (showerSeconds > 0 && showerSeconds % 60 === 0) {
+                        const minutes = showerSeconds / 60;
+                        const minuteText = minutes > 1 ? 'minutos' : 'minuto';
+                        const verbText = minutes > 1 ? 'passaram' : 'passou';
+                        let text = `Já se ${verbText} ${minutes} ${minuteText}.`;
+                        const now = new Date();
+                        const hours = now.getHours();
+                        const minutesStr = now.getMinutes().toString().padStart(2, '0');
+                        text += ` Agora são ${hours} e ${minutesStr}.`;
+                        speak(text);
+                    }
+                }, 1000);
+            }
+
+            function stopAndReset() {
+                if (appState === 'timing' && showerSeconds > 0) {
+                    const totalMinutes = Math.floor(showerSeconds / 60);
+                    const totalSecondsPart = showerSeconds % 60;
+                    const now = new Date();
+                    const hours = now.getHours();
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    let summaryText = `Banho finalizado. Tempo total: ${totalMinutes} ${totalMinutes !== 1 ? 'minutos' : 'minuto'}`;
+                    if (totalSecondsPart > 0) {
+                        summaryText += ` e ${totalSecondsPart} segundos`;
+                    }
+                    summaryText += `. Agora são ${hours} e ${minutes}.`;
+                    speak(summaryText);
+                }
+                appState = 'idle';
+                setButtonState('idle');
+                if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+                if (showerTimerInterval) { clearInterval(showerTimerInterval); showerTimerInterval = null; }
+                settingsContainerEl.classList.remove('hidden');
+                countdownDisplayEl.classList.add('hidden');
+                showerTimerContainerEl.classList.add('hidden');
+                countdownSeconds = 0;
+                showerSeconds = 0;
+            }
+
+            // --- Event Listeners ---
+            startButtonEl.addEventListener('click', () => {
+                if (appState === 'idle') {
+                    // "Acorda" a API de fala no primeiro clique
+                    wakeupSpeechAPI();
+                    startCountdown();
+                } else if (appState === 'countdown' || appState === 'timing') {
+                    stopAndReset();
+                }
+            });
+
+            colorPickerEl.addEventListener('input', (e) => {
+                updateColor(e.target.value);
+            });
+
+            bgColorPickerEl.addEventListener('input', (e) => {
+                document.body.style.backgroundColor = e.target.value;
+            });
+
+            testVoiceButtonEl.addEventListener('click', () => {
+                speak('Esta é uma voz de teste.');
+            });
+
+            // --- Inicialização ---
+            updateMainClock();
+            mainClockInterval = setInterval(updateMainClock, 1000); 
+            setButtonState('idle');
+
+            const defaultColor = '#FFFFFF';
+            colorPickerEl.value = defaultColor;
+            updateColor(defaultColor);
+
+            const defaultBgColor = '#111827'; // bg-gray-900
+            bgColorPickerEl.value = defaultBgColor;
+            document.body.style.backgroundColor = defaultBgColor;
+        });
+    </script>
+
+</body>
+</html>
+
