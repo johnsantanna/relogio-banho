@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#222222">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Relógio de Banho (Canvas)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,9 +19,45 @@
         /* Textura de fundo do "rádio-relógio" */
         body {
             overscroll-behavior-y: contain;
-            /* Textura de ruído escuro */
             background-image: url('https://www.transparenttextures.com/patterns/dark-noise.png');
-            background-color: #222222; /* Fundo padrão caso a textura falhe */
+            background-color: #222222;
+        }
+
+        /* Safe area para top bar (notch, Dynamic Island, câmera frontal) */
+        #top-bar {
+            padding-top: max(1rem, env(safe-area-inset-top));
+            padding-left: max(1rem, env(safe-area-inset-left));
+            padding-right: max(1rem, env(safe-area-inset-right));
+        }
+
+        /* Safe area para barra inferior (home indicator do iPhone) */
+        #bottom-controls {
+            padding-bottom: max(3rem, calc(1.5rem + env(safe-area-inset-bottom)));
+        }
+
+        /* Evita seleção de texto acidental ao toque */
+        #main-clock, #shower-timer, #countdown-display {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Remove delay de 300ms em toques (melhora responsividade) */
+        button, select, input[type=color], input[type=number] {
+            touch-action: manipulation;
+        }
+
+        /* Modo paisagem em celulares pequenos */
+        @media (orientation: landscape) and (max-height: 480px) {
+            #main-clock {
+                font-size: 4.5rem;
+            }
+            #shower-timer-container > span {
+                display: none;
+            }
+            #bottom-controls {
+                padding-top: 0.25rem;
+                gap: 0.5rem;
+            }
         }
 
         /* --- Estilos das Fontes --- */
@@ -127,7 +166,7 @@
 <body class="text-white overflow-hidden">
 
     <!-- ÁREA SUPERIOR (Botões de Fala e Fonte) -->
-    <div class="absolute top-0 left-0 right-0 w-full flex justify-between items-center p-4 z-10">
+    <div id="top-bar" class="absolute top-0 left-0 right-0 w-full flex justify-between items-center p-4 z-10">
         <!-- Seletor de Fonte -->
         <select id="font-selector" class="text-sm">
             <option value="font-orbitron" selected>Orbitron (Padrão)</option>
@@ -164,7 +203,7 @@
             </div>
 
             <!-- Contagem Regressiva (Oculta) -->
-            <div id="countdown-display" class_="hidden text-2xl sm:text-3xl font-orbitron mt-6">
+            <div id="countdown-display" class="hidden text-2xl sm:text-3xl font-orbitron mt-6">
                 Iniciando em 60s...
             </div>
 
@@ -178,7 +217,7 @@
         </div>
 
         <!-- 2. ÁREA DE CONTROLOS (Fixa em baixo) -->
-        <div class="w-full flex flex-col items-center gap-4 p-6 pb-12"> <!-- Mais padding em baixo (pb-12) -->
+        <div id="bottom-controls" class="w-full flex flex-col items-center gap-4 p-6">
             
             <!-- Controles (Visíveis no início) -->
             <div id="settings-container" class="flex flex-row items-center justify-center gap-4 transition-opacity duration-300">
@@ -258,6 +297,33 @@
             
             // --- Estado do Áudio (Beep) ---
             let audioCtx = null; // AudioContext nativo
+
+            // --- Wake Lock (impede a tela de apagar durante o banho) ---
+            let wakeLock = null;
+
+            async function requestWakeLock() {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    }
+                } catch (e) {
+                    console.warn('Wake Lock não disponível:', e);
+                }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock) {
+                    wakeLock.release();
+                    wakeLock = null;
+                }
+            }
+
+            // Reativa o Wake Lock ao voltar para a aba (iOS/Android)
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && (appState === 'countdown' || appState === 'timing')) {
+                    requestWakeLock();
+                }
+            });
 
             // --- Funções Auxiliares (Relógio e UI) ---
 
@@ -498,6 +564,7 @@
             function startCountdown() {
                 appState = 'countdown';
                 setButtonState('countdown');
+                requestWakeLock();
                 
                 let delay = parseInt(delayInputEl.value, 10);
                 if (isNaN(delay) || delay < 0) delay = 0;
@@ -561,6 +628,7 @@
             function stopAndReset() {
                 appState = 'idle';
                 setButtonState('idle');
+                releaseWakeLock();
 
                 if (countdownInterval) clearInterval(countdownInterval);
                 if (showerTimerInterval) clearInterval(showerTimerInterval);
